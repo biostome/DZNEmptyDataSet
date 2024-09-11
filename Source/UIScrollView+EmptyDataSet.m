@@ -245,6 +245,58 @@ static char const * const kEmptyDataSetView =       "emptyDataSetView";
     return nil;
 }
 
+- (BOOL)dzn_buttonMasksToBounds{
+    if (self.emptyDataSetSource && [self.emptyDataSetSource respondsToSelector:@selector(buttonMasksToBoundsForEmptyDataSet:)]) {
+        BOOL mast = [self.emptyDataSetSource buttonMasksToBoundsForEmptyDataSet:self];
+        return mast;
+    }
+    return NO;
+}
+
+- (UIEdgeInsets)dzn_buttonContentInset{
+    if (self.emptyDataSetSource && [self.emptyDataSetSource respondsToSelector:@selector(buttonContentInsetForEmptyDataSet:)]) {
+        UIEdgeInsets edge = [self.emptyDataSetSource buttonContentInsetForEmptyDataSet:self];
+        return edge;
+    }
+    return UIEdgeInsetsZero;
+}
+
+- (CGFloat)dzn_buttonBorderWidth
+{
+    if (self.emptyDataSetSource && [self.emptyDataSetSource respondsToSelector:@selector(buttonBorderWidthForEmptyDataSet:)]) {
+        CGFloat width = [self.emptyDataSetSource buttonBorderWidthForEmptyDataSet:self];
+        return width;
+    }
+    return -1;
+}
+
+- (UIColor *)dzn_buttonBorderColor
+{
+    if (self.emptyDataSetSource && [self.emptyDataSetSource respondsToSelector:@selector(buttonBorderColorForEmptyDataSet:)]) {
+        UIColor *color = [self.emptyDataSetSource buttonBorderColorForEmptyDataSet:self];
+        return color;
+    }
+    return nil;
+}
+
+- (CACornerMask)dzn_buttonMaskedCorners
+{
+    if (self.emptyDataSetSource && [self.emptyDataSetSource respondsToSelector:@selector(buttonMaskedCornersForEmptyDataSet:)]) {
+        CACornerMask mask = [self.emptyDataSetSource buttonMaskedCornersForEmptyDataSet:self];
+        return mask;
+    }
+    return -1;
+}
+
+- (CGFloat)dzn_buttonCornerRadius
+{
+    if (self.emptyDataSetSource && [self.emptyDataSetSource respondsToSelector:@selector(buttonCornerRadiusForEmptyDataSet:)]) {
+        CGFloat radius = [self.emptyDataSetSource buttonCornerRadiusForEmptyDataSet:self];
+        return radius;
+    }
+    return -1;
+}
+
 - (UIColor *)dzn_dataSetBackgroundColor
 {
     if (self.emptyDataSetSource && [self.emptyDataSetSource respondsToSelector:@selector(backgroundColorForEmptyDataSet:)]) {
@@ -449,8 +501,8 @@ static char const * const kEmptyDataSetView =       "emptyDataSetView";
         DZNEmptyDataSetView *view = self.emptyDataSetView;
         
         // Configure empty dataset fade in display
-        view.fadeInOnDisplay = [self dzn_shouldFadeIn];
-        
+        view.fadeInOnDisplay = [self dzn_shouldFadeIn];  
+
         if (!view.superview) {
             // Send the view all the way to the back, in case a header and/or footer is present, as well as for sectionHeaders or any other content
             if (([self isKindOfClass:[UITableView class]] || [self isKindOfClass:[UICollectionView class]]) && self.subviews.count > 1) {
@@ -481,6 +533,12 @@ static char const * const kEmptyDataSetView =       "emptyDataSetView";
             UIImage *image = [self dzn_image];
             UIColor *imageTintColor = [self dzn_imageTintColor];
             UIImageRenderingMode renderingMode = imageTintColor ? UIImageRenderingModeAlwaysTemplate : UIImageRenderingModeAlwaysOriginal;
+            UIColor *borderColor = [self dzn_buttonBorderColor] ?: UIColor.clearColor;
+            CGFloat borderWidth = [self dzn_buttonBorderWidth];
+            CGFloat borderCorner = [self dzn_buttonCornerRadius];
+            CACornerMask borderMask = [self dzn_buttonMaskedCorners];
+            UIEdgeInsets edgeInsets = [self dzn_buttonContentInset];
+            BOOL mast = [self dzn_buttonMasksToBounds];
             
             view.verticalSpace = [self dzn_verticalSpace];
             
@@ -517,6 +575,23 @@ static char const * const kEmptyDataSetView =       "emptyDataSetView";
                 [view.button setBackgroundImage:[self dzn_buttonBackgroundImageForState:UIControlStateNormal] forState:UIControlStateNormal];
                 [view.button setBackgroundImage:[self dzn_buttonBackgroundImageForState:UIControlStateHighlighted] forState:UIControlStateHighlighted];
             }
+            
+            if (borderColor) {
+                [view.button.layer setBorderColor:borderColor.CGColor];
+            }
+            
+            
+            if (borderWidth != -1) {
+                [view.button.layer setBorderWidth:borderWidth];
+            }
+            
+            if (borderCorner != -1) {
+                [view.button.layer setCornerRadius:borderCorner];
+            }
+            
+            [view.button.layer setMaskedCorners:borderMask];
+            [view.button setContentEdgeInsets:edgeInsets];
+            [view.button.layer setMasksToBounds:mast];
         }
         
         // Configure offset
@@ -530,10 +605,13 @@ static char const * const kEmptyDataSetView =       "emptyDataSetView";
         // Configure empty dataset userInteraction permission
         view.userInteractionEnabled = [self dzn_isTouchAllowed];
         
+        // Configure empty dataset fade in display
+        view.fadeInOnDisplay = [self dzn_shouldFadeIn];
+        
         [view setupConstraints];
         
         [UIView performWithoutAnimation:^{
-            [view layoutIfNeeded];
+            [view layoutIfNeeded];            
         }];
         
         // Configure scroll permission
@@ -737,7 +815,7 @@ Class dzn_baseClassToSwizzleForTarget(id target)
 {
     CGRect superviewBounds = self.superview.bounds;
     self.frame = CGRectMake(0.0, 0.0, CGRectGetWidth(superviewBounds), CGRectGetHeight(superviewBounds));
-    
+        
     void(^fadeInBlock)(void) = ^{_contentView.alpha = 1.0;};
     
     if (self.fadeInOnDisplay) {
@@ -991,8 +1069,18 @@ Class dzn_baseClassToSwizzleForTarget(id target)
             [subviewStrings addObject:@"button"];
             views[[subviewStrings lastObject]] = _button;
             
-            [self.contentView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|-(padding@750)-[button(>=0)]-(padding@750)-|"
-                                                                                     options:0 metrics:metrics views:views]];
+            [self.contentView addConstraint:[NSLayoutConstraint constraintWithItem:_button
+                                                                         attribute:NSLayoutAttributeCenterX
+                                                                         relatedBy:NSLayoutRelationEqual
+                                                                            toItem:self.contentView
+                                                                         attribute:NSLayoutAttributeCenterX
+                                                                        multiplier:1.0
+                                                                          constant:0]];
+            
+            [self.contentView addConstraints:[NSLayoutConstraint constraintsWithVisualFormat:@"H:|-(>=padding)-[button]-(>=padding)-|"
+                                                                                     options:0
+                                                                                     metrics:@{@"padding": @(padding)}
+                                                                                       views:@{@"button": _button}]];
         }
         // or removes from its superview
         else {

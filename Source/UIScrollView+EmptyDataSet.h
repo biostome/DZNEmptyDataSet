@@ -121,6 +121,54 @@ NS_ASSUME_NONNULL_BEGIN
 - (nullable UIImage *)buttonBackgroundImageForEmptyDataSet:(UIScrollView *)scrollView forState:(UIControlState)state;
 
 /**
+ Asks the data source for the border width to be used for the button in the empty dataset view.
+
+ @param scrollView A scrollView subclass informing the data source.
+ @return A CGFloat value representing the border width for the button.
+ */
+- (CGFloat)buttonBorderWidthForEmptyDataSet:(UIScrollView *)scrollView;
+
+/**
+ Asks the data source for the border color to be used for the button in the empty dataset view.
+
+ @param scrollView A scrollView subclass informing the data source.
+ @return A UIColor object representing the border color for the button.
+ */
+- (nullable UIColor *)buttonBorderColorForEmptyDataSet:(UIScrollView *)scrollView;
+
+/**
+ Asks the data source for the masked corners to be applied to the button in the empty dataset view.
+
+ @param scrollView A scrollView subclass informing the data source.
+ @return A CACornerMask value specifying which corners should be masked for the button.
+ */
+- (CACornerMask)buttonMaskedCornersForEmptyDataSet:(UIScrollView *)scrollView;
+
+/**
+ Asks the data source for the corner radius to be used for the button in the empty dataset view.
+
+ @param scrollView A scrollView subclass informing the data source.
+ @return A CGFloat value representing the corner radius for the button.
+ */
+- (CGFloat)buttonCornerRadiusForEmptyDataSet:(UIScrollView *)scrollView;
+
+/**
+ Asks the data source for the content inset to be used for the button in the empty dataset view.
+
+ @param scrollView A scrollView subclass informing the data source.
+ @return A UIEdgeInsets value specifying the insets for the button's content.
+ */
+- (UIEdgeInsets)buttonContentInsetForEmptyDataSet:(UIScrollView *)scrollView;
+
+/**
+ Asks the data source whether the button should have its bounds masked in the empty dataset view.
+
+ @param scrollView A scrollView subclass informing the data source.
+ @return A Boolean value indicating whether the button's bounds should be masked.
+ */
+- (BOOL)buttonMasksToBoundsForEmptyDataSet:(UIScrollView *)scrollView;
+
+/**
  Asks the data source for the background color of the dataset. Default is clear color.
  
  @param scrollView A scrollView subclass object informing the data source.
